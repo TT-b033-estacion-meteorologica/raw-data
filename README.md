@@ -24,7 +24,7 @@ estación, para trazabilidad, auditoría y reutilización como datos abiertos.
 
 ## ¿Datos en crudo o datos limpios?
 
-| | **weather-data** (este repositorio) | **clean-data** |
+| | **raw-data** (este repositorio) | **clean-data** |
 |---|---|---|
 | Contenido | Datos originales de la estación | Datos con valores inválidos convertidos a nulos y tipos corregidos |
 | Granularidad | 1 archivo por día | 1 archivo mensual por vista temática |
@@ -34,8 +34,9 @@ estación, para trazabilidad, auditoría y reutilización como datos abiertos.
 ## Estructura del repositorio
 
 ```
-weather-data/
+raw-data/
 ├── README.md
+├── metadata.yml
 └── data/
     └── AAAA/
         └── MM/
@@ -82,32 +83,36 @@ proyecto.
 
 ## Procedencia
 
-Un proceso automático en Google Cloud consulta cada día, a las 12:00 (hora de la Ciudad de
-México), la consola de la estación y obtiene los registros del día anterior. El archivo se guarda
-aquí sin transformación y, en paralelo, se carga a una base de datos PostgreSQL donde se limpia y
-se publica en [clean-data](https://github.com/TT-b033-estacion-meteorologica/clean-data).
-Los metadatos de la norma NTM-INEGI 2024 (v2.0) se publican en
-`clean-data`.
+Un proceso automático en Google Cloud consulta cada día, a la 01:00 (hora de la Ciudad de
+México), la consola de la estación y obtiene los registros del día anterior; además revisa los
+últimos 7 días y recupera los registros que falten. Los registros se cargan a una base de datos
+PostgreSQL y se agregan aquí sin transformación; en la base de datos se limpian y se publican a
+diario (13:00) en [clean-data](https://github.com/TT-b033-estacion-meteorologica/clean-data).
+Los metadatos de este repositorio, según la norma NTM-INEGI 2024 (v2.0), están en
+`metadata.yml`.
 
 ## Calidad y limitaciones conocidas
 
 Estos datos **no están limpios ni validados**. Antes de analizarlos, considera:
 
 - Los valores `---` indican dato no disponible y deben tratarse como nulos.
-- Pueden existir registros duplicados o incompletos por cortes en la transmisión de la estación.
+- Pueden existir días incompletos por cortes en la transmisión de la estación.
 - El registro de las 00:00 h no se captura, por lo que la mayoría de los días completos tiene 95
   registros en lugar de 96.
-- Hay días sin datos o incompletos: la puesta en marcha (24 de abril al 2 de mayo de 2026) y los
-  días 7, 15 y 16 de septiembre de 2026.
-- **Presión barométrica:** el campo `bar` está en mmHg, no en hPa. Hasta el 2 de julio de 2026 la
-  consola reportó presión reducida al nivel del mar (≈762–774 mmHg) y desde el 4 de julio presión
-  absoluta de la estación (≈572–582 mmHg); el 3 de julio no hay datos. No hay corrección: analiza
-  los dos periodos por separado.
+- Hay días sin datos que ya no pueden recuperarse: 31 de mayo; 19, 23, 24 y 29 de junio; 3, 18 y
+  19 de julio; 11 de agosto, y 7, 15 y 16 de septiembre de 2026. Los días de la puesta en marcha
+  (24 de abril al 2 de mayo de 2026) y algunos días aislados están incompletos.
+- **Presión barométrica:** el campo `bar` está en mmHg, no en hPa. Del 3 de julio de 2026 a las
+  00:00 h al 20 de octubre de 2026 a las 09:15 h la consola tuvo una calibración errónea del
+  barómetro y reportó la presión 192.1 mmHg por debajo de su valor (≈572–582 mmHg). Aquí se
+  conserva sin corregir; la corrección (+192.1 mmHg) solo se aplica en
+  [clean-data](https://github.com/TT-b033-estacion-meteorologica/clean-data).
 - Temperatura y humedad relativa se reportan sin decimales (resolución de 1 °C y 1 %).
 - Radiación solar, índice UV y evapotranspiración no están disponibles (sensores no instalados).
 - Viento: la mayoría de los intervalos registra calma (0 km/h); el anemómetro podría estar
   resguardado, por lo que los datos reflejan la circulación local.
-- No se aplica verificación de rangos físicos ni marcado de valores atípicos.
+- Los valores atípicos no se marcan ni se eliminan. En cada captura el sistema revisa los registros
+  nuevos (rangos físicos, saltos de presión y sensores sin lectura) y avisa al equipo.
 
 ## Cómo usar los datos
 
@@ -133,7 +138,7 @@ df = df.drop_duplicates().sort_values("timestamp")
 ## Cómo citar
 
 > Estación Meteorológica ESCOM-IPN (2026). *Datos meteorológicos en crudo - Estación ESCOM IPN*
-> [conjunto de datos]. GitHub. https://github.com/TT-b033-estacion-meteorologica/weather-data
+> [conjunto de datos]. GitHub. https://github.com/TT-b033-estacion-meteorologica/raw-data
 
 ## Licencia
 
