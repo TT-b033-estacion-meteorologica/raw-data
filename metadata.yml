@@ -1,0 +1,191 @@
+# =============================================================
+# Metadatos bajo la Norma Técnica para la Elaboración de
+# Metadatos Geográficos (NTM) - INEGI - Versión 2024 (2.0)
+# Repositorio de DATOS CRUDOS (RAW) - archivo estático
+# =============================================================
+
+# ── SECCIÓN 1. IDENTIFICACIÓN ────────────────────────────────
+identificacion:
+  titulo: "Datos Meteorológicos Crudos (RAW) - Estación ESCOM IPN"
+  proposito: >
+    Conservar, sin ninguna transformación, los registros tal como los entrega
+    la estación meteorológica del campus ESCOM del IPN, para garantizar la
+    trazabilidad, la auditoría y el reprocesamiento de los datos publicados
+    en el repositorio de datos limpios.
+  descripcion: >
+    Un archivo CSV por día con los registros meteorológicos capturados cada
+    15 minutos por la estación Davis Vantage Vue ubicada en ESCOM, IPN,
+    Ciudad de México. Los valores se conservan como texto, incluyendo los
+    marcadores de dato faltante ('---') y el formato original de fecha
+    (DD:MM:YYYY). Estos datos no están depurados ni corregidos.
+  idioma: "ES"
+  categoria_tema:
+    tema_principal: "3"           # Atmósfera climatológica, meteorológica
+    grupo_datos: "5"              # Recursos naturales y clima
+  palabras_clave:
+    - meteorología
+    - datos crudos
+    - RAW
+    - temperatura
+    - humedad
+    - presión barométrica
+    - viento
+    - precipitación
+    - Ciudad de México
+    - Open Data
+    - IPN
+    - ESCOM
+  forma_presentacion: "14"        # Tabla digital
+  enlace_en_linea:
+    direccion: "https://github.com/TT-b033-estacion-meteorologica/weather-data"
+    descripcion_acceso: "Repositorio GitHub con archivos CSV diarios sin procesar"
+  frecuencia_actualizacion: "1"   # Diariamente
+  conjunto_caracteres: "5"        # UTF-8
+  descripcion_uso: >
+    Uso de auditoría, verificación y reprocesamiento. Para análisis se
+    recomienda el repositorio de datos limpios (clean-data), que aplica
+    limpieza, tipado y corrección de la presión barométrica. Citar la
+    fuente: Estación Meteorológica ESCOM-IPN.
+  proceso_produccion:
+    programa_informacion: "Estación Meteorológica ESCOM-IPN"
+    proceso: "Captura automática por HTTP y carga diaria a Cloud SQL y GitHub"
+    siglas: "EM-ESCOM-IPN"
+    ciclo: "Diario"
+  resolucion_temporal: "15 minutos"
+  organizacion_archivos: "data/AAAA/MM/weather_AAAAMMDD.csv (un archivo por día)"
+  repositorio_relacionado:
+    nombre: "clean-data (datos limpios)"
+    direccion: "https://github.com/TT-b033-estacion-meteorologica/clean-data"
+
+# ── SECCIÓN 2. FECHAS RELACIONADAS ───────────────────────────
+fechas:
+  eventos:
+    - tipo: "1"                   # Creación (primer dato de la estación)
+      fecha: "2026-04-18"
+    - tipo: "2"                   # Revisión (elaboración de estos metadatos)
+      fecha: "2026-11-09"
+
+# ── SECCIÓN 3. PARTE RESPONSABLE ─────────────────────────────
+parte_responsable:
+  organizacion: "Escuela Superior de Cómputo - IPN"
+  domicilio: "Av. Juan de Dios Bátiz s/n, GAM, Ciudad de México"
+  entidad_federativa: "Ciudad de México"
+  pais: "México"
+  enlace_en_linea: "https://www.escom.ipn.mx"
+  rol: "1"                        # Autor
+
+# ── SECCIÓN 4. LOCALIZACIÓN GEOGRÁFICA ───────────────────────
+localizacion_geografica:
+  coordenadas:
+    limite_oeste: -99.1480
+    limite_este: -99.1455
+    limite_sur: 19.5035
+    limite_norte: 19.5057
+  tipo_representacion_espacial: "1"   # Alfanumérico (datos tabulares)
+
+# ── SECCIÓN 5. SISTEMA DE REFERENCIA ─────────────────────────
+sistema_referencia:
+  horizontal:
+    coordenadas_geograficas:
+      unidades: "Grados decimales"
+    modelo_geodesico:
+      datum_horizontal: "ITRF08 época 2010.0"
+      elipsoide: "GRS80"
+
+# ── SECCIÓN 6. CALIDAD DE LOS DATOS ──────────────────────────
+calidad:
+  linaje:
+    enunciado: >
+      La estación registra mediciones cada 15 minutos. Un proceso programado
+      con Cloud Scheduler (≈12:00 h, hora de la Ciudad de México) ejecuta un
+      servicio de Cloud Run que obtiene por HTTP los registros del día previo
+      y los guarda sin transformación en dos destinos: (1) este repositorio,
+      como un archivo CSV por día, y (2) la tabla raw_weather_data de Cloud
+      SQL (PostgreSQL), de la cual se derivan los datos limpios.
+  nivel: "3"                      # Conjunto de datos no geoespaciales
+  pasos_proceso:
+    descripcion: >
+      1. Extracción HTTP desde la consola de la estación.
+      2. Generación del archivo weather_AAAAMMDD.csv con los registros del día,
+      sin modificar valores ni formatos.
+      3. Carga del archivo en este repositorio (copia de respaldo versionada).
+      4. Inserción de los mismos registros en raw_weather_data (Cloud SQL).
+    tecnologia:
+      hardware: "Google Cloud Run (contenedor on-demand)"
+      software: "Python 3.11, psycopg2, PostgreSQL 14, GitHub"
+    fuentes:
+      - "Estación meteorológica Davis Vantage Vue (consola con acceso HTTP)"
+  control_calidad:
+    criterio:
+      completitud:
+        subcriterio: "Omisión"
+        ambito: "No se realiza depuración: los valores faltantes se conservan como '---'"
+      consistencia_logica:
+        subcriterio: "Consistencia de formato"
+        ambito: "Se conserva el formato original de la estación (fecha DD:MM:YYYY, hora HH:MM)"
+    descripcion: >
+      Esta capa no aplica limpieza, conversión ni corrección alguna. Su
+      finalidad es permitir verificar visualmente que la carga diaria se
+      ejecutó correctamente (existencia del archivo del día, número de
+      registros y estructura) sin acceder a la base de datos. La validación,
+      el tipado y las correcciones se realizan posteriormente mediante vistas
+      SQL y se publican en el repositorio clean-data.
+  limitaciones_conocidas:
+    - "Datos sin depurar: pueden contener '---' (dato faltante) y valores atípicos."
+    - "Todos los valores son texto; la fecha usa el formato DD:MM:YYYY."
+    - >
+      Presión barométrica no homogénea: desde el 3 de julio de 2026 y hasta el
+      20 de octubre de 2026 a las 09:15 h hubo una discontinuidad por una
+      configuración incorrecta del barómetro. Aquí se conserva sin corregir; el
+      ajuste (+192.1 mmHg) se aplica únicamente en el repositorio clean-data.
+    - "La presión se expresa en mmHg, la unidad configurada en la consola."
+    - "Temperatura y humedad relativa se reportan sin decimales."
+    - >
+      El registro de las 00:00 h de cada día no se captura, por lo que la
+      mayoría de los días completos tiene 95 registros en lugar de 96.
+    - >
+      Hay días sin datos o incompletos: la puesta en marcha (24 de abril al
+      2 de mayo de 2026) y los días 7, 15 y 16 de septiembre de 2026, que no
+      pudieron recuperarse.
+    - >
+      Radiación solar, índice UV y evapotranspiración no están disponibles
+      (sensores no instalados); sus campos, si aparecen, no contienen mediciones.
+
+# ── SECCIÓN 7. ENTIDADES Y ATRIBUTOS ─────────────────────────
+entidades_atributos:
+  descripcion_general: >
+    Cada archivo weather_AAAAMMDD.csv contiene los registros de un día
+    (≈95 filas, una por intervalo de 15 minutos) con los campos originales de
+    la estación: fecha y hora, temperaturas, humedades, precipitación, presión,
+    viento y las unidades declaradas por la consola. Todos los campos se
+    publican como texto.
+  cita_detalle: >
+    Ver README.md en la raíz del repositorio para el diccionario de campos.
+
+# ── SECCIÓN 8. DISTRIBUCIÓN ──────────────────────────────────
+distribucion:
+  restriccion_acceso: "3"         # Licencia
+  restriccion_uso: "3"            # Licencia
+  licencia: "CC BY 4.0"
+  responsabilidad: >
+    Los datos se proporcionan tal como son capturados, sin depuración.
+    ESCOM-IPN no garantiza la continuidad del servicio.
+  formato:
+    nombre: "CSV (Comma Separated Values)"
+    version: "RFC 4180"
+
+# ── SECCIÓN 9. INFORMACIÓN DE LOS METADATOS ──────────────────
+informacion_metadatos:
+  nombre_norma: "Norma Técnica para la Elaboración de Metadatos Geográficos (NTM)"
+  version_norma: "2024 (2.0)"
+  idioma: "ES"
+  punto_contacto:
+    organizacion: "Escuela Superior de Cómputo - IPN"
+    entidad_federativa: "Ciudad de México"
+    pais: "México"
+    enlace_en_linea: "https://github.com/TT-b033-estacion-meteorologica"
+    rol: "1"
+  fechas:
+    - tipo: "1"                   # Creación de los metadatos
+      fecha: "2026-11-09"
+  conjunto_caracteres: "5"
