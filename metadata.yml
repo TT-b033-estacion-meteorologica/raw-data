@@ -37,7 +37,7 @@ identificacion:
     - ESCOM
   forma_presentacion: "14"        # Tabla digital
   enlace_en_linea:
-    direccion: "https://github.com/TT-b033-estacion-meteorologica/weather-data"
+    direccion: "https://github.com/TT-b033-estacion-meteorologica/raw-data"
     descripcion_acceso: "Repositorio GitHub con archivos CSV diarios sin procesar"
   frecuencia_actualizacion: "1"   # Diariamente
   conjunto_caracteres: "5"        # UTF-8
@@ -97,22 +97,24 @@ calidad:
   linaje:
     enunciado: >
       La estación registra mediciones cada 15 minutos. Un proceso programado
-      con Cloud Scheduler (≈12:00 h, hora de la Ciudad de México) ejecuta un
+      con Cloud Scheduler (≈01:00 h, hora de la Ciudad de México) ejecuta un
       servicio de Cloud Run que obtiene por HTTP los registros del día previo
-      y los guarda sin transformación en dos destinos: (1) este repositorio,
-      como un archivo CSV por día, y (2) la tabla raw_weather_data de Cloud
-      SQL (PostgreSQL), de la cual se derivan los datos limpios.
+      (y de los últimos 7 días que tengan huecos) y los guarda sin
+      transformación en dos destinos: (1) la tabla raw_weather_data de Cloud
+      SQL (PostgreSQL), de la cual se derivan los datos limpios, y (2) este
+      repositorio, como un archivo CSV por día.
   nivel: "3"                      # Conjunto de datos no geoespaciales
   pasos_proceso:
     descripcion: >
       1. Extracción HTTP desde la consola de la estación.
-      2. Generación del archivo weather_AAAAMMDD.csv con los registros del día,
-      sin modificar valores ni formatos.
-      3. Carga del archivo en este repositorio (copia de respaldo versionada).
-      4. Inserción de los mismos registros en raw_weather_data (Cloud SQL).
+      2. Inserción de los registros en raw_weather_data (Cloud SQL); la
+      restricción de unicidad fecha-hora evita duplicados.
+      3. Si hubo registros nuevos, se agregan al archivo weather_AAAAMMDD.csv
+      del día, sin modificar valores ni formatos.
+      4. Carga del archivo en este repositorio (copia de respaldo versionada).
     tecnologia:
       hardware: "Google Cloud Run (contenedor on-demand)"
-      software: "Python 3.11, psycopg2, PostgreSQL 14, GitHub"
+      software: "Python 3.11, psycopg2, PostgreSQL 15, GitHub"
     fuentes:
       - "Estación meteorológica Davis Vantage Vue (consola con acceso HTTP)"
   control_calidad:
@@ -144,9 +146,10 @@ calidad:
       El registro de las 00:00 h de cada día no se captura, por lo que la
       mayoría de los días completos tiene 95 registros en lugar de 96.
     - >
-      Hay días sin datos o incompletos: la puesta en marcha (24 de abril al
-      2 de mayo de 2026) y los días 7, 15 y 16 de septiembre de 2026, que no
-      pudieron recuperarse.
+      Hay días sin datos que ya no pueden recuperarse: 31 de mayo; 19, 23, 24
+      y 29 de junio; 3, 18 y 19 de julio; 11 de agosto, y 7, 15 y 16 de
+      septiembre de 2026. Los días de la puesta en marcha (24 de abril al 2 de
+      mayo de 2026) y algunos días aislados están incompletos.
     - >
       Radiación solar, índice UV y evapotranspiración no están disponibles
       (sensores no instalados); sus campos, si aparecen, no contienen mediciones.
